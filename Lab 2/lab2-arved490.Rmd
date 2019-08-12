@@ -67,18 +67,34 @@ rownames(emissionProbs) = 1:10
 kable(emissionProbs, row.names = 1:10)
 ```
 
+\newpage
 
-```{r, echo=FALSE, eval=FALSE}
+```{r, echo=TRUE, eval=FALSE}
 
 ############### 1 ###############
 
-# Initialize matrix with transition probabilities. P(X_1|X) = 0.5, P(X|X) = 0.5
+set.seed(1234)
+nStates <- 10
+states = symbols <- 1:10
+
+getNoiseInterval <- function(index, nStates, noise) {
+  start <- index - noise
+  end <- index + noise
+  interval <- start:end %% nStates
+  interval[interval==0] <- nStates
+  return(interval)
+}
+
+# Initialize matrix with transition probabilities.
+# P(X_1|X) = 0.5, P(X|X) = 0.5
+tProb <- 0.5
 transProbs <- tProb * diag(nStates)
 for(i in 1:nStates) {
   transProbs[i,(i %% nStates + 1)] <- tProb
 }
 
-# Initialize emission probabilities. P(Y-2|X) = P(Y-1|X) = P(Y|X) = P(Y+1|X) = P(Y+2|X) = 0.2
+# Initialize emission probabilities.
+# P(Y-2|X) = P(Y-1|X) = P(Y|X) = P(Y+1|X) = P(Y+2|X) = 0.2
 eProb <- 0.2
 emissionProbs <- matrix(0, nrow = nStates, ncol = nStates)
 noise <- 2
@@ -111,7 +127,7 @@ sims <- simHMM(HMM, nSteps)
 
 \newpage
 
-# 3
+# 3 - Forward/Backward and Path Calculation
 
 ```{r, echo=TRUE, eval=FALSE}
 
@@ -138,7 +154,7 @@ smootherPath <- apply(smoother, MARGIN = 2, which.max)
 
 \newpage
 
-# 4
+# 4 - Accuracy
 
 ```{r, echo=TRUE, eval=FALSE}
 
@@ -161,7 +177,7 @@ smootherAccuracy =  accuracy(smootherPath, sims$states)
 
 \newpage
 
-# 5
+# 5 - Verifying
 
 Repeated trials yields the same result as in 4). The smoothed distribution appears to have a higher accuracy than both the most probable path and the filtered distribution. This is natural since the smoother is the joint probability of both future and past observations, thus containing more information than the filtered distribution. The viterbi algorithm only calculates the most probable sequence, which intuitively always will be less accurate than the path obtained by maximizing the marginal probability for each individual timestep, regardless of neighboring states.
 
@@ -196,7 +212,7 @@ smootherAccuracy =  accuracy(smootherPath, sims$states)
 
 \newpage
 
-# 6
+# 6 - Additional observations
 
 ![Entropy](./plots/Rplot.png){height=50%}
 
@@ -233,7 +249,7 @@ plot(rollingMeanEntropy,
 
 \newpage
 
-# 7
+# 7 - Step 101
 
 The state vector for the filtered distribution at timestep 100
 
