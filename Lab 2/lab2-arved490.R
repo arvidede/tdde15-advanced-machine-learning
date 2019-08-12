@@ -25,9 +25,6 @@ tProb <- 0.5
 nStates <- 10
 states = symbols <- 1:10
 
-
-############### 1 ###############
-
 getNoiseInterval <- function(index, nStates, noise) {
   start <- index - noise
   end <- index + noise
@@ -35,6 +32,12 @@ getNoiseInterval <- function(index, nStates, noise) {
   interval[interval==0] <- nStates
   return(interval)
 }
+
+accuracy <- function(path, states) {
+  return(sum(diag(table(path, states)) / length(path)))
+}
+
+############### 1 ###############
 
 # Initialize matrix with transition probabilities. P(X->X) = 0.5, P(X -> X+1) = 0.5
 transProbs <- tProb * diag(nStates)
@@ -84,10 +87,6 @@ legend(x='topright', fill = c('black', 'red', 'green', 'blue'), legend = c('Stat
 
 
 ############### 4 ###############
-
-accuracy <- function(path, states) {
-  return(sum(diag(table(path, states)) / length(path)))
-}
 
 # 0.49
 viterbiAccuracy = accuracy(viterbiPath, sims$states)
@@ -150,4 +149,4 @@ plot(rollingMeanEntropy, type='l', main="Rolling mean of entropy", ylab = 'Entro
 
 hiddenStates101 <- colSums(filter[,100] * transProbs)
 
-# P(X = 1) = 0.33, P(X = 2) = 0.50, P(X = 3) = 0.17, given filter[,100] = [0.65, 0.35, 0, ...]
+# P(X_101 = 1) = 0.33, P(X_101 = 2) = 0.50, P(X_101 = 3) = 0.17, given filter[,100] = [0.65, 0.35, 0, ...]
