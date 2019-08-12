@@ -52,6 +52,7 @@ confusion_matrix <- function(BN, data, obs_var, pred_var) {
     for(j in obs_var) {
       X[j] <- if(data[i,j] == 'yes') 'yes' else 'no'
     }
+    # X <- data[i,obs_var] didn't work, even though it returns the same as the loop above
     find <- setEvidence(object=BN, nodes=obs_var, states=X) # Recommended over setFinding
     dist <- querygrain(object=find, nodes=pred_var)[[pred_var]]
     predictions[i] <- if(dist['yes'] >= 0.5) 'yes' else 'no'
@@ -60,10 +61,11 @@ confusion_matrix <- function(BN, data, obs_var, pred_var) {
 }
 
 set.seed(123)
-samples <- sample(1:nrow(asia), size = floor(0.8*nrow(asia)), replace = F)
+samples <- sample(1:nrow(asia), size = floor(0.8*nrow(asia)), replace = FALSE)
 train <- asia[samples, ]
 test  <- asia[-samples, ]
 
+# Create networks
 BN_train <- hc(train, restart=3, score = 'bic')
 BN_true = model2network("[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]")
 
@@ -71,6 +73,7 @@ BN_true = model2network("[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]")
 BN_train <- compile(as.grain(bn.fit(BN_train, train)))
 BN_true <- compile(as.grain(bn.fit(BN_true, train)))
 
+# Generate confusion matrices
 conf_matrix <- confusion_matrix(BN_train, data=test, obs_var=c('A', 'D', 'X', 'E', 'B', 'L', 'T'), pred_var='S')
 conf_matrix_true <- confusion_matrix(BN_true, data=test, obs_var=c('A', 'D', 'X', 'E', 'B', 'L', 'T'), pred_var='S')
 
