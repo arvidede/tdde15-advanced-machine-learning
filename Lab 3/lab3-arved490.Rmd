@@ -1,20 +1,22 @@
-#################################################
-# Arvid Edenheim - arved490                     #
-# Linköping University                          #
-# Advanced Machine Learning - TDDE15            #
-# Lab 3                                         #
-# Last edited: 2019-08-18                       #
-#################################################
+---
+title: "Lab 3 - State Space Models"
+author: "Arvid Edenheim - arved490"
+date: "`r Sys.Date()`"
+output: pdf_document
+header-includes:
+  \usepackage{float}
+  \floatplacement{figure}{H}
+---
 
-# Purpose: Evauluate true states given a set of observations,
-# given a known transition and noise model, using a particle filter
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(kableExtra)
+```
 
-############# Model ###############
-# Transition: 
-# Emission:
-# Prior: Uniform(0,100)
-###################################
+\newpage
 
+# Setup
+```{r, echo=TRUE, eval=FALSE}
 ############# Function setup ###############
 
 # Returns emission probabilities
@@ -127,22 +129,47 @@ plotParticles <- function(particles, simulations, step) {
     paste('MAE',eval(round(mean(abs(Z - particles[step,])), 5)))))
 }
 
-
+# Plot the residual between the particles and the true values
 plotResidual <- function(particles, simulations, sigma) {
   res <- rowMeans(particles) - simulations$states
   plot(res[2:length(res)], type='l', ylim=c(-20, 20), main=paste('sd = ', eval(sigma)))
 }
+```
 
-plotCurve <- function(particles, simulations, sigma=1) {
-  interval <- 2:40
-  plot(interval, simulations$states[interval], type='l', ylab='State', xlab='Step', main=paste('sd = ', eval(sigma)))
-  lines(interval, rowMeans(particles[interval,]), col='blue')
-  lines(simulations$observations[interval], col='red')
-  legend('bottomright',
-         legend = c('True state', 'Particle mean', 'Observations'),
-         fill = c('black', 'blue', 'red'))
-}
 
+# Model
+
+Transition model
+
+$p(z_t|z_{t-1})$ =$\frac{\mathcal{N}(z_t|z_{t-1}, 1) + \mathcal{N}(z_t|z_{t-1} + 1, 1) + \mathcal{N}(z_t|z_{t-1} + 2, 1)}{3}$
+
+
+Emission model
+
+$p(x_t|z_t)$ =$\frac{\mathcal{N}(x_t|z_t, 1) + \mathcal{N}(x_t|z_t-1, 1) + \mathcal{N}(x_t|z_t+1, 1)}{3}$
+
+
+Initial model
+
+$p(z_1) = Uniform(0,100)$
+
+\newpage
+
+# 1
+
+I plotted the particles at timestep 1, 25, 75 and 100 and evaluated the MAE as well as MAPE score in order to track the progress.
+
+![Particles at step 1](./plots/step1.png){height=55%}
+
+![Particles at step 25](./plots/step25.png){height=55%}
+
+![Particles at step 75](./plots/step75.png){height=60%}
+
+![Particles at step 100](./plots/step100.png){height=60%}
+
+![Traceplot comparision](./plots/1sd1.png){height=70%}
+
+```{r, echo=TRUE, eval=FALSE}
 ################ 1 ################
 set.seed(1234)
 T = M <- 100
@@ -155,7 +182,19 @@ plotParticles(particles = particles, simulations = simulations, step=75)
 plotParticles(particles = particles, simulations = simulations, step=100)
 
 plotCurve(particles = particles, simulations = simulations)
+```
 
+\newpage
+
+# 2
+
+I started with plotting traceplots with sd = 5 and sd = 50, as in 1), which turned out to be a bit messy when the variance of the observations got higher. In order to evaluate and compare the different models, I plotted the residual of the true state and particle mean for the different standard deviations. It's surprising how well the filter performs even for higher sigmas, although it struggles when the variance gets absurd. This shows that although the variance of the particles might be high, evaluating the mean will still generate a reasonably good prediction. Thus, more noise (higher emission variance) probably requires a larger number of particles in order to give accurate predictions.
+
+![Traceplot, sd = 5](./plots/2sd5.png){width=50%} ![Traceplot, sd = 50](./plots/2sd50.png){width=50%}
+
+![Particle residual for different standard deviations](./plots/SDResidual.png){height=45%}
+
+```{r, echo=TRUE, eval=FALSE}
 ################ 2 ################
 set.seed(1234)
 T = M <- 100
@@ -177,8 +216,21 @@ simulations <- simulate(T, emissionSigma = 50)
 particles <- particleFilter(T=T, M=M, X=simulations$observations, emissionSigma = 50)
 plotResidual(particles, simulations, 50)
 
-################ 3 ################
+```
 
+\newpage
+
+# 3
+
+Without correction, the particles seem to converge towards two different values. I would have expected the particles to be distributed almost according to the initial uniform model, since we sample from the particles with unweighted probability.
+
+![Particles at step 1 ](./plots/constant1.png){height=50%}
+![Particles at step 25 ](./plots/constant25.png){height=50%}
+![Particles at step 75 ](./plots/constant75.png){height=50%}
+![Particles at step 100 ](./plots/constant100.png){height=50%}
+
+```{r, echo=TRUE, eval=FALSE}
+################ 3 ################
 set.seed(1234)
 T = M <- 100
 simulations <- simulate(T)
@@ -188,3 +240,7 @@ plotParticles(particles = particles, simulations = simulations, step=1)
 plotParticles(particles = particles, simulations = simulations, step=25)
 plotParticles(particles = particles, simulations = simulations, step=75)
 plotParticles(particles = particles, simulations = simulations, step=100)
+```
+
+
+
