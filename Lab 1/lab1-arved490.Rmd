@@ -1,24 +1,28 @@
-#################################################
-# Arvid Edenheim - arved490                     #
-# Linköpings University                         #
-# Advanced Machine Learning - TDDE15            #
-# Lab 1                                         #
-# Last edited: 2019-07-27                       #
-#################################################
+---
+title: "Lab 1 - Probabilistic Graphical Models"
+author: "Arvid Edenheim - arved490"
+date: "`r Sys.Date()`"
+output: pdf_document
+header-includes:
+  \usepackage{float}
+  \floatplacement{figure}{H}
+---
 
-##### Setup #####
 
-if(!require(bnlearn)) {
-  install.packages("bnlearn")
-}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(kableExtra)
+```
 
-if(!require(gRain)) {
-  install.packages("gRain")
-}
+\newpage
 
-library(bnlearn)
-library(gRain)
+# 1
 
+I generated two networks with the hill-climbing algorithm using two different score functions: log likhelihood and bayesian information criterion. Due to the lack of parameter punishment in the log likelihood, it generated the complete graph as output. The two networks are clearly non equivalent.
+
+![Generated networks from the hill-climb algorithm](./plots/1.png)
+
+```{r eval=FALSE, echo=TRUE}
 ###### Assignment 1 ######
 # Show non-equivalent BN structures for multiple runs of the HC algorithm
 
@@ -42,8 +46,45 @@ plot(hc_bic, main='Score: bic')
 # Check equality
 print(all.equal(hc_loglik, hc_bic))
 # Nope
+```
+
+\newpage
+
+# 2
+
+The resulting network generated an identical confusion matrix to the true network. Looking at the plots, this is most likely due to the same structure of outgoing edges from S, which was predicted on. If this were to be changed to node A, it would most likely generate conflicting results. The overall accuracy wasn't great, so if we only were interested in lowering either the false positive or false negative, the evaluated posterior probability should be compared to a more biased value than 0.5, f.i. setting it to 0.9 would make the model classify true only when it's very certain, drastically decreasing the false positives (but ofc increasing the false negatives).
+
+Confusion Matrix - True BN
+\begin{table}[ht]
+\begin{tabular}{|c|cc|}
+\hline
+& False & True \\
+\hline
+False & 341 & 157 \\
+True & 119 & 383 \\
+\hline
+\end{tabular}
+\label{ }
+\end{table}
+Confusion Matrix - generated BN
+\begin{table}[ht]
+\begin{tabular}{|c|cc|}
+\hline
+& False & True \\
+\hline
+False & 341 & 157 \\
+True & 119 & 383 \\
+\hline
+\end{tabular}
+\label{ }
+\end{table}
 
 
+![Network comparison](./plots/2.png)
+
+\newpage
+
+```{r eval=FALSE, echo=TRUE}
 ###### Assignment 2 ######
 # Learn a BN from 80% of the data and classify on the rest, compare with true BN
 
@@ -90,35 +131,74 @@ conf_matrix_true <- confusionMatrix(BN_true,
                                      pred_var='S')
 
 # How can they be identical? Am I a pro? No: P(B|S)P(L|S)
+```
 
-###### Assignment 3 ######
+\newpage
 
-# Create networks
-BN_train <- hc(train, restart=3, score = 'bic')
-BN_true = model2network("[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]")
+# 3
 
-MB_train <- mb(BN_train, 'S')
-MB_true <- mb(BN_true, 'S')
+The confusion matrices were equal to those in 2), which supports the d-separation theorem for markov blankets. As described in 2), the markov blanket for both graphs are identical, yielding the similar results.
 
-par(mfrow=c(1,2))
-plot(BN_train, main='Generated BN')
-plot(BN_true, main='True BN')
+$MB_{hc}(S) = MB_{true}(S) = [B, L]$
 
-# Convert to grain and run Lauritzen-Spiegelhalter
-BN_train <- compile(as.grain(bn.fit(BN_train, train)))
-BN_true <- compile(as.grain(bn.fit(BN_true, train)))
+Confusion Matrix - True BN
+\begin{table}[ht]
+\begin{tabular}{|c|cc|}
+\hline
+& False & True \\
+\hline
+False & 341 & 157 \\
+True & 119 & 383 \\
+\hline
+\end{tabular}
+\label{ }
+\end{table}
+Confusion Matrix - generated BN
+\begin{table}[ht]
+\begin{tabular}{|c|cc|}
+\hline
+& False & True \\
+\hline
+False & 341 & 157 \\
+True & 119 & 383 \\
+\hline
+\end{tabular}
+\label{ }
+\end{table}
 
-# Predict and generate confusion matrices
-conf_matrix <- confusionMatrix(BN_train,
-                               data=test,
-                               obs_var=MB_train,
-                               pred_var='S')
-conf_matrix_true <- confusionMatrix(BN_true,
-                                    data=test,
-                                    obs_var=MB_true,
-                                    pred_var='S')
+\newpage
+
+# 4
+
+![Network comparison](./plots/4.png)
+
+Confusion Matrix - Naive Bayes
+\begin{table}[ht]
+\begin{tabular}{|c|cc|}
+\hline
+& False & True \\
+\hline
+False & 374 & 124 \\
+True & 181 & 321 \\
+\hline
+\end{tabular}
+\label{ }
+\end{table}
+Confusion Matrix - generated BN
+\begin{table}[ht]
+\begin{tabular}{|c|cc|}
+\hline
+& False & True \\
+\hline
+False & 341 & 157 \\
+True & 119 & 383 \\
+\hline
+\end{tabular}
+\label{ }
+\end{table}
 
 
+```{r eval=FALSE, echo=TRUE}
 ###### Assignment 4 ######
 
 # Create a naive bayes classifier on S
@@ -154,7 +234,10 @@ conf_matrix_true <- confusionMatrix(BN_true,
                                     data=test,
                                     obs_var=c('A', 'D', 'X', 'E', 'B', 'L', 'T'),
                                     pred_var='S')
+```
 
+# 5
 
+A short comparison between 2) & 3) can be found in 3).
 
-
+The reason the results differ is reasonably due to the vastly different structure, resulting in a different markov blanket, with all other nodes appearing as conditionally independent children given S.
